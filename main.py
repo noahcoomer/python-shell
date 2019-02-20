@@ -8,6 +8,7 @@ from os.path import expanduser
 import datetime
 
 
+# Execute a child process
 def child_command(cmd, args):
     try:
         os.execvp("/usr/bin/" + cmd, args)
@@ -22,17 +23,28 @@ def execute_command(command):
     if pid == 0:
         # replace the memory space with the user specified command
         child_command(command[0], command[1:])
-        
     
     
 # Change the current working directory
-def change_directory(current_directory, inp):
-    new = os.path.join(current_directory, inp)
-    if os.path.isdir(new):
-        return(new)
-    else: 
-        print("\n No such directory \n")
-        return(current_directory)
+def change_directory(current_directory, input, directory_history):    
+    if input == '-':
+        current_directory = directory_history[len(directory_history)-2]
+
+    elif input == '.':
+        return (current_directory)
+
+    elif input == '..': 
+        split_directory = current_directory.split('/')
+        split_directory = split_directory[:-1]
+        return('/'.join(split_directory))
+
+    else:   
+        new = os.path.join(current_directory, input)
+        if os.path.isdir(new):
+            return(new)
+        else: 
+            print("\n No such directory \n")
+            return(current_directory)
         
 
 # Display a list of previously executed commands
@@ -49,7 +61,7 @@ def list_sources(current_directory):
 
 def main():
     history = []
-
+    directory_history = []
     # Set the current directory to "home" or equivalent
     current_directory = expanduser("~")
     while True:
@@ -74,12 +86,14 @@ def main():
             # cd will return the user to home if no directory is specified
             # the user will also be told if the directoey doesn't exist
             try:
-                current_directory = change_directory(current_directory, command[1])
+                current_directory = change_directory(current_directory, command[1], directory_history)
+                directory_history.append(current_directory)
             except:
                 if len(command) == 1:
                     current_directory = expanduser("~")
                 else:
                     print("invalid format")
+
             history.append((current_time, command))
 
         else:
