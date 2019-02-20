@@ -2,14 +2,32 @@
 ### Operating Systems
 ### python-shell
 
+
 import os
 from os.path import expanduser
 import datetime
 
 
+def child_command(cmd, args):
+    try:
+        os.execvp("/usr/bin/" + cmd, args)
+        os_exit(0)
+    except:
+        os_exit(1)
+
+# Execute a user specififed command
+def execute_command(command):
+    pid = os.fork()
+    # if we are the child process
+    if pid == 0:
+        # replace the memory space with the user specified command
+        child_command(command[0], command[1:])
+        
+    
+    
 # Change the current working directory
-def change_directory(current_directory, input):
-    new = os.path.join(current_directory, input)
+def change_directory(current_directory, inp):
+    new = os.path.join(current_directory, inp)
     if os.path.isdir(new):
         return(new)
     else: 
@@ -35,7 +53,7 @@ def main():
     # Set the current directory to "home" or equivalent
     current_directory = expanduser("~")
     while True:
-        command = input(current_directory + " $ ").split(' ')
+        command = input(current_directory + "> ").split(' ')
         current_time = datetime.datetime.now().strftime("%H:%M")
         
         if command[0] == 'exit':
@@ -65,6 +83,10 @@ def main():
             history.append((current_time, command))
 
         else:
-            print("Sorry, I do not understand that command.")
+            #print("Sorry, I do not understand that command.")
+            execute_command(command)
+            history.append((current_time, command))
+            
 
-main()
+if '__main__' == __name__:
+    main()
