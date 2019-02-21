@@ -13,33 +13,37 @@ def child_command(cmd, args):
     try:
         os.execvp("/usr/bin/" + cmd, args)
         os_exit(0)
-    except:
+    except Exception as e:
         os_exit(1)
+        print(e)
 
 # Execute a user specififed command
 def execute_command(command):
     pid = os.fork()
-    # if we are the child process
-    if pid == 0:
-        # replace the memory space with the user specified command
+    # if we have encountered an error
+    if pid < 0:
+        print("Fork failed.")
+    elif pid == 0:
         child_command(command[0], command[1:])
+    else:
+        os.wait()
     
     
 # Change the current working directory
-def change_directory(current_directory, input, directory_history):    
-    if input == '-':
+def change_directory(current_directory, inp, directory_history):    
+    if inp == '-':
         current_directory = directory_history[len(directory_history)-2]
 
-    elif input == '.':
+    elif inp == '.':
         return (current_directory)
 
-    elif input == '..': 
+    elif inp == '..': 
         split_directory = current_directory.split('/')
         split_directory = split_directory[:-1]
         return('/'.join(split_directory))
 
     else:   
-        new = os.path.join(current_directory, input)
+        new = os.path.join(current_directory, inp)
         if os.path.isdir(new):
             return(new)
         else: 
@@ -64,6 +68,7 @@ def main():
     directory_history = []
     # Set the current directory to "home" or equivalent
     current_directory = expanduser("~")
+    change_directory(current_directory, current_directory, [])
     while True:
         command = input(current_directory + "> ").split(' ')
         current_time = datetime.datetime.now().strftime("%H:%M")
