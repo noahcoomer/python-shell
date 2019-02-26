@@ -12,19 +12,20 @@ import datetime
 def child_command(cmd, args):
     try:
         os.execvp("/usr/bin/" + cmd, args)
-        os_exit(0)
+        os._exit(0)
     except Exception as e:
-        os_exit(1)
+        os._exit(1)
         print(e)
 
-# Execute a user specififed command
+# Execute a user specified command
 def execute_command(command):
     pid = os.fork()
     # if we have encountered an error
     if pid < 0:
         print("Fork failed.")
+        return 1
     elif pid == 0:
-        child_command(command[0], command[1:])
+        child_command(command[0], command)
     else:
         os.wait()
     
@@ -33,6 +34,7 @@ def execute_command(command):
 def change_directory(current_directory, inp, directory_history):    
     if inp == '-':
         current_directory = directory_history[len(directory_history)-2]
+        return current_directory
 
     elif inp == '.':
         return (current_directory)
@@ -71,17 +73,21 @@ def main():
     change_directory(current_directory, current_directory, [])
     while True:
         command = input(current_directory + "> ").split(' ')
+        n = len(command) # this should only be 1 if we are using built-in functions except for cd
         current_time = datetime.datetime.now().strftime("%H:%M")
-        
+
+        # exit the terminal
         if command[0] == 'exit':
             print("Goodbye.")
             break
 
-        elif command[0] == 'stat':
+        # show terminal history
+        elif command[0] == 'stat' and n == 1:
             stat_command(history)
             history.append((current_time, command))
 
-        elif command[0] == 'ls':
+        # list current sources
+        elif command[0] == 'ls' and n == 1:
             list_sources(current_directory)
             history.append((current_time, command))
 
@@ -101,11 +107,12 @@ def main():
 
             history.append((current_time, command))
 
+        # run a user specified command
         else:
             #print("Sorry, I do not understand that command.")
             execute_command(command)
             history.append((current_time, command))
             
 
-if '__main__' == __name__:
+if __name__ == '__main__':
     main()
