@@ -69,10 +69,10 @@ def main():
     history = []
     directory_history = []
     # Set the current directory to "home" or equivalent
-    current_directory = expanduser("~")
-    change_directory(current_directory, current_directory, [])
+    os.chdir(expanduser("~"))
+
     while True:
-        command = input(current_directory + "> ").split(' ')
+        command = input(os.getcwd()+ "> ").split(' ')
         n = len(command) # this should only be 1 if we are using built-in functions except for cd
         current_time = datetime.datetime.now().strftime("%H:%M")
 
@@ -88,20 +88,21 @@ def main():
 
         # list current sources
         elif command[0] == 'ls' and n == 1:
-            list_sources(current_directory)
+            list_sources(os.getcwd())
             history.append((current_time, command))
 
         # change directory
         elif command[0] == 'cd':
 
             # cd will return the user to home if no directory is specified
-            # the user will also be told if the directoey doesn't exist
+            # the user will also be told if the directory doesn't exist
             try:
-                current_directory = change_directory(current_directory, command[1], directory_history)
+                current_directory = change_directory(os.getcwd(), command[1], directory_history)
                 directory_history.append(current_directory)
+                os.chdir(current_directory)
             except:
                 if len(command) == 1:
-                    current_directory = expanduser("~")
+                    os.chdir(expanduser("~"))
                 else:
                     print("invalid format")
 
