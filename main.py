@@ -8,15 +8,6 @@ from os.path import expanduser
 import datetime
 
 
-# Execute a child process
-def child_command(cmd, args):
-    try:
-        os.execvp("/usr/bin/" + cmd, args)
-        os._exit(0)
-    except Exception as e:
-        os._exit(1)
-        print(e)
-
 # Execute a user specified command
 def execute_command(command):
     pid = os.fork()
@@ -25,9 +16,45 @@ def execute_command(command):
         print("Fork failed.")
         return 1
     elif pid == 0:
-        child_command(command[0], command)
+        try:
+            os.execvp("/usr/bin/" + command[0], command)
+            os._exit(0)
+        except Exception as e:
+            # if we can't find the program in /usr/bin/ check /bin/
+            if e.errno == 2:
+                try:
+                    os.execvp("/bin/" + command[0], command)
+                    os._exit(0)
+                except Exception as e:
+                    print(e)
+                    os._exit(1)
+            else:
+                print(e)
+                os._exit(1)
     else:
         os.wait()
+
+
+# Attempt to change directory via system calls
+def change_dir(command):
+    command = ["cd"] + command[1]
+    #pid = os.fork()
+
+    os.execvp("/usr/bin/cd", command)
+    os._exit(0)
+    
+##    if pid < 0:
+##        print("Fork failed.")
+##        return 1
+##    elif pid == 0:
+##        try:
+##            os.execvp("/usr/bin/cd", command)
+##            os._exit(0)
+##        except Exception as e:
+##            print(e)
+##            os._exit(1)
+##    else:
+##        os.wait()
     
     
 # Change the current working directory
@@ -68,12 +95,13 @@ def list_sources(current_directory):
 def main():
     history = []
     directory_history = []
+    
     # Set the current directory to "home" or equivalent
     os.chdir(expanduser("~"))
 
     while True:
-        command = input(os.getcwd()+ "> ").split(' ')
-        n = len(command) # this should only be 1 if we are using built-in functions except for cd
+        command = input(os.getcwd() + "> ").split(' ')
+        n = len(command)
         current_time = datetime.datetime.now().strftime("%H:%M")
 
         # exit the terminal
@@ -100,6 +128,7 @@ def main():
                 current_directory = change_directory(os.getcwd(), command[1], directory_history)
                 directory_history.append(current_directory)
                 os.chdir(current_directory)
+                #change_dir(command)
             except:
                 if len(command) == 1:
                     os.chdir(expanduser("~"))
