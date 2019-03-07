@@ -33,29 +33,6 @@ def execute_command(command):
                 os._exit(1)
     else:
         os.wait()
-
-
-# Attempt to change directory via system calls
-def change_dir(command):
-    command = ["cd"] + command[1]
-    #pid = os.fork()
-
-    os.execvp("/usr/bin/cd", command)
-    os._exit(0)
-    
-##    if pid < 0:
-##        print("Fork failed.")
-##        return 1
-##    elif pid == 0:
-##        try:
-##            os.execvp("/usr/bin/cd", command)
-##            os._exit(0)
-##        except Exception as e:
-##            print(e)
-##            os._exit(1)
-##    else:
-##        os.wait()
-    
     
 # Change the current working directory
 def change_directory(current_directory, inp, directory_history):    
@@ -84,12 +61,6 @@ def change_directory(current_directory, inp, directory_history):
 def stat_command(history):
     for time, cmd in history:
         print(time, '    ', ' '.join(cmd))
-       
-
-# Display a list of all files and directories in the current working directory
-def list_sources(current_directory):
-    for file in os.listdir(current_directory):
-        print(file)
 
 
 def main():
@@ -109,15 +80,14 @@ def main():
             print("Goodbye.")
             break
 
+        elif command[0] == '':
+            continue
+
         # show terminal history
         elif command[0] == 'stat' and n == 1:
             stat_command(history)
             history.append((current_time, command))
 
-        # list current sources
-        elif command[0] == 'ls' and n == 1:
-            list_sources(os.getcwd())
-            history.append((current_time, command))
 
         # change directory
         elif command[0] == 'cd':
@@ -128,7 +98,7 @@ def main():
                 current_directory = change_directory(os.getcwd(), command[1], directory_history)
                 directory_history.append(current_directory)
                 os.chdir(current_directory)
-                #change_dir(command)
+
             except:
                 if len(command) == 1:
                     os.chdir(expanduser("~"))
@@ -139,7 +109,6 @@ def main():
 
         # run a user specified command
         else:
-            #print("Sorry, I do not understand that command.")
             execute_command(command)
             history.append((current_time, command))
             
